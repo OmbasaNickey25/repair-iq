@@ -2,7 +2,7 @@
   "name": "repair-iq-pwa",
   "version": "1.0.0",
   "description": "Smart Hardware Learning Assistant PWA",
-  "main": "src/index.js",
+  "main": "backend/main.js",
   "scripts": {
     "start": "node backend/main.js",
     "postinstall": "cd backend && npm install",
