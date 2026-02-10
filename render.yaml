@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: repair-iq-pwa
+    env: node
+    plan: free
+    buildCommand: npm install && cd backend && npm install
+    startCommand: node backend/main.js
+    envVars:
+      - key: PORT
+        value: 3000
