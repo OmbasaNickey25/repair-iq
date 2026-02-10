@@ -43,7 +43,10 @@ export class App {
                 body: formData
             });
 
-            if (!response.ok) throw new Error("Backend prediction failed");
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || errorData.details || "Backend prediction failed");
+            }
 
             const result = await response.json();
             const { component, confidence } = result;
