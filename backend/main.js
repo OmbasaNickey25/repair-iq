@@ -21,17 +21,45 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // Hardware Classes (Verify these match your training data labels)
 const HARDWARE_CLASSES = [
-    "RAM Module",
-    "CPU Processor",
-    "Motherboard",
-    "Graphics Card (GPU)",
-    "Hard Disk Drive (HDD)",
-    "Solid State Drive (SSD)",
-    "Power Supply Unit (PSU)",
-    "Cooling Fan",
-    "Network Card",
-    "Battery"
+    // PC / Phone Components
+    "ram_module",
+    "ram_stick",
+    "hard_drive",
+    "ssd",
+    "capacitor",
+    "motherboard",
+    "charging_port",
+    "processor",
+    "sim_slot",
+    "battery",
+    "display_connector",
+
+    // Computer Ports
+    "usb_port",
+    "hdmi_port",
+    "ethernet_port",
+    "vga_port",
+    "dvi_port",
+
+    // Internal Computer Components
+    "power_supply_unit",
+    "graphics_card",
+    "cooling_fan",
+    "heat_sink",
+
+    // Cables
+    "sata_cable",
+    "power_cable",
+    "vga_cable",
+    "dvi_cable",
+
+    // Peripherals
+    "keyboard",
+    "mouse",
+    "monitor",
+    "speakers"
 ];
+
 
 // Load Model
 let model;
@@ -97,7 +125,11 @@ app.post('/predict', upload.single('image'), async (req, res) => {
 
     } catch (error) {
         console.error('Prediction error:', error);
-        res.status(500).json({ error: 'Internal server error', details: error.message });
+        // Enhanced error logging
+        if (error.message.includes('Input buffer contains unsupported image format')) {
+            return res.status(400).json({ error: 'Invalid image format', details: 'The uploaded file is not a valid image or is unsupported.' });
+        }
+        res.status(500).json({ error: 'Internal server error', details: error.message, stack: process.env.NODE_ENV === 'development' ? error.stack : undefined });
     }
 });
 
