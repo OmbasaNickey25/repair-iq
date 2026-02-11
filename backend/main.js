@@ -4,6 +4,9 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const tf = require('@tensorflow/tfjs-node');
+const http = require('http');
+const WebSocket = require('ws');
+const QRCode = require('qrcode');
 
 // Environment configuration
 const config = {
@@ -14,6 +17,8 @@ const config = {
 };
 
 const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
 const port = config.port;
 
 // Middleware
@@ -26,6 +31,58 @@ app.use('/src', express.static(path.join(__dirname, '../src')));
 
 // Upload configuration
 const upload = multer({ storage: multer.memoryStorage() });
+
+// Phone camera connection management
+const phoneConnections = new Map();
+let connectionId = 0;
+
+// WebSocket connection handling
+wss.on('connection', (ws) => {
+    const id = ++connectionId;
+    phoneConnections.set(id, ws);
+    
+    if (config.enableLogging) {
+        console.log(`Phone camera connected: ${id}`);
+    }
+    
+    ws.on('message', (message) => {
+        try {
+            const data = JSON.parse(message);
+            
+            if (data.type === 'frame') {
+                // Broadcast frame to all connected desktop clients
+                wss.clients.forEach(client => {
+                    if (client !== ws && client.readyState === WebSocket.OPEN) {
+                        client.send(JSON.stringify({
+                            type: 'phone-frame',
+                            id: id,
+                            data: data.data
+                        }));
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('WebSocket message error:', error);
+        }
+    });
+    
+    ws.on('close', () => {
+        phoneConnections.delete(id);
+        if (config.enableLogging) {
+            console.log(`Phone camera disconnected: ${id}`);
+        }
+        
+        // Notify desktop clients
+        wss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({
+                    type: 'phone-disconnected',
+                    id: id
+                }));
+            }
+        });
+    });
+});
 
 // Hardware Classes (Verify these match your training data labels)
 const HARDWARE_CLASSES = [
@@ -202,6 +259,203 @@ app.post('/predict', upload.single('image'), async (req, res) => {
     }
 });
 
+// Phone camera connection endpoint
+app.get('/phone-camera', (req, res) => {
+    const phoneUrl = `${req.protocol}://${req.get('host')}/phone-camera.html`;
+    
+    QRCode.toDataURL(phoneUrl, (err, qrCode) => {
+        if (err) {
+            return res.status(500).json({ error: 'Failed to generate QR code' });
+        }
+        
+        res.json({
+            phoneUrl: phoneUrl,
+            qrCode: qrCode,
+            instructions: [
+                '1. Scan this QR code with your phone',
+                '2. Open the link in your phone browser',
+                '3. Allow camera access on your phone',
+                '4. Your phone camera will appear in the desktop app'
+            ]
+        });
+    });
+});
+
+// Phone camera interface page
+app.get('/phone-camera.html', (req, res) => {
+    res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RepairIQ - Phone Camera</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        #phone-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+        .status {
+            background: rgba(0, 123, 255, 0.8);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+        }
+        .disconnect-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .error {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            padding: 20px;
+            background: rgba(220, 53, 69, 0.9);
+            border-radius: 10px;
+            max-width: 80%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <video id="phone-video" autoplay playsinline muted></video>
+        <div class="controls">
+            <div class="status" id="status">Connecting...</div>
+            <button class="disconnect-btn" onclick="disconnect()">Disconnect</button>
+        </div>
+        <div class="error" id="error" style="display: none;">
+            <h3>Camera Access Required</h3>
+            <p>Please allow camera access to use this feature.</p>
+            <button onclick="requestCamera()">Try Again</button>
+        </div>
+    </div>
+
+    <script>
+        let ws;
+        let video;
+        let canvas;
+        let stream;
+        
+        function init() {
+            video = document.getElementById('phone-video');
+            canvas = document.createElement('canvas');
+            const status = document.getElementById('status');
+            
+            // Connect WebSocket
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(\`\${protocol}//\${window.location.host}\`);
+            
+            ws.onopen = () => {
+                status.textContent = 'Connected to desktop';
+                status.style.background = 'rgba(40, 167, 69, 0.8)';
+                requestCamera();
+            };
+            
+            ws.onclose = () => {
+                status.textContent = 'Disconnected';
+                status.style.background = 'rgba(220, 53, 69, 0.8)';
+            };
+            
+            ws.onerror = () => {
+                status.textContent = 'Connection error';
+                status.style.background = 'rgba(220, 53, 69, 0.8)';
+            };
+        }
+        
+        function requestCamera() {
+            const error = document.getElementById('error');
+            
+            navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: 'environment',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                } 
+            })
+            .then(s => {
+                stream = s;
+                video.srcObject = stream;
+                error.style.display = 'none';
+                startStreaming();
+            })
+            .catch(err => {
+                console.error('Camera error:', err);
+                error.style.display = 'block';
+            });
+        }
+        
+        function startStreaming() {
+            const ctx = canvas.getContext('2d');
+            canvas.width = 640;
+            canvas.height = 480;
+            
+            function captureFrame() {
+                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({
+                            type: 'frame',
+                            data: dataUrl
+                        }));
+                    }
+                }
+                requestAnimationFrame(captureFrame);
+            }
+            
+            captureFrame();
+        }
+        
+        function disconnect() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            if (ws) {
+                ws.close();
+            }
+            window.close();
+        }
+        
+        // Initialize on load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
+    `);
+});
 // Health check endpoint for Render monitoring
 app.get('/health', (req, res) => {
     res.json({
@@ -213,11 +467,12 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Start server
-app.listen(port, () => {
+// Start server with WebSocket support
+server.listen(port, () => {
     console.log(`Backend server running at http://localhost:${port}`);
     console.log(`Environment: ${config.nodeEnv}`);
     console.log(`Health check available at: http://localhost:${port}/health`);
+    console.log(`Phone camera QR code at: http://localhost:${port}/phone-camera`);
 });
 
 // Graceful shutdown and memory cleanup

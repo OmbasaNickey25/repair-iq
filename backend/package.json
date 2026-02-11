@@ -12,7 +12,9 @@
         "cors": "^2.8.5",
         "multer": "^1.4.5-lts.1",
         "body-parser": "^1.20.2",
-        "@tensorflow/tfjs-node": "^4.10.0"
+        "@tensorflow/tfjs-node": "^4.10.0",
+        "ws": "^8.14.2",
+        "qrcode": "^1.5.3"
     },
     "engines": {
         "node": ">=14.0.0"

@@ -1,54 +1,84 @@
 const CACHE_NAME = 'repair-iq-v1';
-const ASSETS = [
-    '/',
-    '/index.html',
-    '/css/style.css',
-    '/manifest.json',
-    '/src/index.js',
-    '/src/App.js',
-    '/src/components/CameraScanner.js',
-    '/src/components/ComponentCard.js',
-    '/src/components/VoicePlayer.js',
-    '/src/components/AROverlay.js',
-    '/src/ai/prompts.js',
-    '/src/utils/textToSpeech.js',
-    '/src/utils/decisionTree.js',
-    '/icons/icon-192x192.png',
-    '/icons/icon-512x512.png'
+const urlsToCache = [
+  '/',
+  '/index.html',
+  '/css/style.css',
+  '/src/index.js',
+  '/src/App.js',
+  '/src/components/CameraScanner.js',
+  '/src/components/ComponentCard.js',
+  '/src/components/VoicePlayer.js',
+  '/src/components/AROverlay.js',
+  '/src/ai/prompts.js',
+  '/src/utils/index.js',
+  '/manifest.json',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png'
 ];
 
-self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then((cache) => cache.addAll(ASSETS))
-    );
+// Install event - cache resources
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('Opened cache');
+        return cache.addAll(urlsToCache);
+      })
+  );
 });
 
-self.addEventListener('fetch', (event) => {
-    // Cache-first strategy for static assets
-    // Network-first or Network-only for API calls
+// Fetch event - serve from cache when offline
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        // Cache hit - return response
+        if (response) {
+          return response;
+        }
 
-    if (event.request.url.includes('/predict')) {
-        // API calls: Network only (or fallback to user message)
-        return;
-    }
+        // Clone the request
+        const fetchRequest = event.request.clone();
 
-    event.respondWith(
-        caches.match(event.request)
-            .then((response) => response || fetch(event.request))
-    );
+        return fetch(fetchRequest).then(
+          response => {
+            // Check if valid response
+            if(!response || response.status !== 200 || response.type !== 'basic') {
+              return response;
+            }
+
+            // Clone the response
+            const responseToCache = response.clone();
+
+            caches.open(CACHE_NAME)
+              .then(cache => {
+                cache.put(event.request, responseToCache);
+              });
+
+            return response;
+          }
+        ).catch(() => {
+          // Return offline page for navigation requests
+          if (event.request.destination === 'document') {
+            return caches.match('/index.html');
+          }
+        });
+      })
+  );
 });
 
-self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cache) => {
-                    if (cache !== CACHE_NAME) {
-                        return caches.delete(cache);
-                    }
-                })
-            );
+// Activate event - clean up old caches
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
         })
-    );
+      );
+    })
+  );
 });

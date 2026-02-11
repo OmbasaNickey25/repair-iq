@@ -13,6 +13,14 @@
     <script src="https://js.puter.com/v2/"></script>
 </head>
 <body>
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-content">
+            <h1 class="app-title">🔧 RepairIQ</h1>
+            <p class="app-subtitle">Smart Hardware Learning Assistant</p>
+        </div>
+    </header>
+
     <div id="app">
         <!-- Camera View -->
         <div class="camera-container">
@@ -24,6 +32,12 @@
         <div class="controls-layer">
             <button id="scan-btn" class="scan-btn" aria-label="Scan Component">
                 <span class="icon">🔍</span> SCAN
+            </button>
+            <button id="refresh-btn" class="refresh-btn" aria-label="Refresh Scan">
+                <span class="icon">🔄</span> REFRESH
+            </button>
+            <button id="camera-btn" class="camera-btn" aria-label="Switch Camera">
+                <span class="icon">📱</span> PHONE
             </button>
         </div>
 
@@ -40,5 +54,20 @@
 
     <!-- Main Script -->
     <script type="module" src="/src/index.js"></script>
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/serviceWorker.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+    </script>
 </body>
 </html>

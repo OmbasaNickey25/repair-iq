@@ -1,9 +1,22 @@
 :root {
     --primary-color: #007bff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
     --accent-color: #00ff00;
     --bg-color: #1a1a1a;
     --text-color: #ffffff;
-    --card-bg: rgba(28, 28, 28, 0.9);
+    --text-muted: #b3b3b3;
+    --card-bg: rgba(28, 28, 28, 0.95);
+    --card-border: rgba(255, 255, 255, 0.1);
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --gradient-warning: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
 * {
@@ -19,21 +32,56 @@ body {
     overflow: hidden; /* App feel */
     height: 100vh;
     width: 100vw;
+    margin: 0;
+    padding: 0;
+}
+
+/* Header */
+.app-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, rgba(0, 123, 255, 0.9), rgba(0, 0, 0, 0.8));
+    backdrop-filter: blur(10px);
+    padding: 15px 20px;
+    z-index: 20;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-content {
+    text-align: center;
+}
+
+.app-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin: 0;
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.app-subtitle {
+    font-size: 0.9rem;
+    margin: 5px 0 0 0;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 300;
 }
 
 #app {
     position: relative;
     width: 100%;
     height: 100%;
+    padding-top: 80px; /* Space for header */
 }
 
 /* Camera & AR */
 .camera-container {
     position: absolute;
-    top: 0;
+    top: 80px; /* Account for header */
     left: 0;
     width: 100%;
-    height: 100%;
+    height: calc(100% - 80px); /* Account for header */
     z-index: 1;
 }
 
@@ -60,104 +108,367 @@ body {
     width: 100%;
     display: flex;
     justify-content: center;
+    gap: 20px;
     z-index: 10;
     pointer-events: none; /* Let clicks pass through except buttons */
 }
 
-.scan-btn {
+.scan-btn, .refresh-btn, .camera-btn {
     pointer-events: auto;
     background: var(--primary-color);
     border: 4px solid rgba(255, 255, 255, 0.2);
     color: white;
-    width: 80px;
-    height: 80px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 12px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     cursor: pointer;
-    transition: transform 0.1s;
+    transition: transform 0.1s, background-color 0.2s;
 }
 
-.scan-btn:active {
+.refresh-btn {
+    background: #28a745;
+    width: 60px;
+    height: 60px;
+}
+
+.camera-btn {
+    background: #6f42c1;
+    width: 60px;
+    height: 60px;
+}
+
+.camera-btn.active {
+    background: #20c997;
+    animation: pulse 2s infinite;
+}
+
+.scan-btn:active, .refresh-btn:active, .camera-btn:active {
     transform: scale(0.95);
 }
 
-.scan-btn .icon {
-    font-size: 24px;
+.scan-btn:hover, .refresh-btn:hover, .camera-btn:hover {
+    background-color: #0056b3;
+}
+
+.refresh-btn:hover {
+    background-color: #218838;
+}
+
+.camera-btn:hover {
+    background-color: #5a32a3;
+}
+
+.scan-btn .icon, .refresh-btn .icon, .camera-btn .icon {
+    font-size: 20px;
     margin-bottom: 2px;
 }
 
-/* Component Card */
+.refresh-btn .icon, .camera-btn .icon {
+    font-size: 18px;
+}
+
+/* Component Card - Modern Design */
 .component-card {
     position: absolute;
     bottom: 120px; /* Above scan button */
     left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    max-width: 400px;
-    max-height: 50vh;
+    transform: translateX(-50%) translateY(100px);
+    width: 95%;
+    max-width: 450px;
+    max-height: 60vh;
     background: var(--card-bg);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    padding: 16px;
-    overflow-y: auto;
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid var(--card-border);
+    padding: 0;
+    overflow: hidden;
     z-index: 5;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-    transition: opacity 0.3s ease;
-}
-
-.component-card.hidden {
+    box-shadow: var(--shadow-xl);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     opacity: 0;
     pointer-events: none;
 }
 
+.component-card.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+
+.component-card.hidden {
+    opacity: 0;
+    transform: translateX(-50%) translateY(100px);
+    pointer-events: none;
+}
+
+/* Card Header with Gradient */
 .card-header {
+    background: var(--gradient-primary);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.card-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.card-header-content {
+    position: relative;
+    z-index: 1;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    padding-bottom: 8px;
 }
 
 .card-header h2 {
-    font-size: 1.2rem;
-    color: var(--primary-color);
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
-.badge {
-    background: rgba(255,255,255,0.1);
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.8rem;
+.confidence-badge {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.confidence-badge.high {
+    background: rgba(40, 167, 69, 0.8);
+}
+
+.confidence-badge.medium {
+    background: rgba(255, 193, 7, 0.8);
+}
+
+.confidence-badge.low {
+    background: rgba(220, 53, 69, 0.8);
+}
+
+.confidence-icon {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+/* Card Body */
+.card-body {
+    padding: 24px;
+    max-height: 40vh;
+    overflow-y: auto;
+}
+
+.card-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.card-body::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.card-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.card-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
 }
 
 .card-body h3 {
-    font-size: 1rem;
-    margin-top: 10px;
-    color: #ddd;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-body h3::before {
+    content: '📋';
+    font-size: 1.2rem;
 }
 
 .card-body p, .card-body ul {
-    font-size: 0.9rem;
-    line-height: 1.4;
-    color: #ccc;
-    margin-bottom: 8px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    margin-bottom: 16px;
 }
 
 .card-body ul {
     padding-left: 20px;
+    margin-bottom: 20px;
+}
+
+.card-body li {
+    margin-bottom: 8px;
+    position: relative;
+}
+
+.card-body li::marker {
+    color: var(--primary-color);
+}
+
+/* Info Sections */
+.info-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.info-section.warning {
+    border-left-color: var(--warning-color);
+    background: rgba(255, 193, 7, 0.1);
+}
+
+.info-section.success {
+    border-left-color: var(--success-color);
+    background: rgba(40, 167, 69, 0.1);
+}
+
+.info-title {
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Loading State */
+.card-loading {
+    text-align: center;
+    padding: 40px 20px;
+    background: var(--card-bg);
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+.loading-text {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+}
+
+.loading-subtitle {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+/* Error State */
+.card-error {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
+    border-left: 4px solid var(--danger-color);
+    padding: 24px;
+    text-align: center;
+}
+
+.error-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: 0.7;
+}
+
+.error-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--danger-color);
+    margin-bottom: 8px;
+}
+
+.error-message {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* Action Buttons */
+.card-actions {
+    display: flex;
+    gap: 12px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border-top: 1px solid var(--card-border);
+}
+
+.card-btn {
+    flex: 1;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.card-btn.primary {
+    background: var(--gradient-primary);
+    color: white;
+}
+
+.card-btn.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+    border: 1px solid var(--card-border);
+}
+
+.card-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.card-btn:active {
+    transform: translateY(0);
 }
 
 /* Voice Controls */
 .voice-controls {
     position: absolute;
-    top: 20px;
+    top: 100px; /* Account for header */
     right: 20px;
     z-index: 10;
     display: flex;
@@ -205,4 +516,369 @@ body {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* Animation Classes */
+.animate-slide-in {
+    animation: slideInUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+.animate-scale-in {
+    animation: scaleIn 0.3s ease-out;
+}
+
+.animate-pulse {
+    animation: pulse 2s infinite;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    /* Header adjustments */
+    .app-header {
+        padding: 12px 16px;
+    }
+    
+    .app-title {
+        font-size: 1.5rem;
+    }
+    
+    .app-subtitle {
+        font-size: 0.8rem;
+    }
+    
+    #app {
+        padding-top: 70px;
+    }
+    
+    /* Camera adjustments */
+    .camera-container {
+        top: 70px;
+        height: calc(100% - 70px);
+    }
+    
+    /* Voice controls */
+    .voice-controls {
+        top: 85px;
+        right: 15px;
+    }
+    
+    .btn-icon {
+        width: 35px;
+        height: 35px;
+        font-size: 16px;
+    }
+    
+    /* Component card adjustments */
+    .component-card {
+        width: 90%;
+        max-width: none;
+        bottom: 100px;
+        border-radius: 16px;
+    }
+    
+    .card-header {
+        padding: 16px;
+    }
+    
+    .card-header h2 {
+        font-size: 1.2rem;
+    }
+    
+    .confidence-badge {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+    }
+    
+    .card-body {
+        padding: 20px;
+        max-height: 45vh;
+    }
+    
+    .card-body h3 {
+        font-size: 1rem;
+    }
+    
+    .card-body p, .card-body ul {
+        font-size: 0.9rem;
+    }
+    
+    .info-section {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+    
+    .card-actions {
+        padding: 16px;
+        gap: 8px;
+    }
+    
+    .card-btn {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+    }
+    
+    /* Controls adjustments */
+    .controls-layer {
+        bottom: 20px;
+        gap: 15px;
+    }
+    
+    .scan-btn, .refresh-btn {
+        width: 60px;
+        height: 60px;
+        font-size: 10px;
+    }
+    
+    .scan-btn .icon, .refresh-btn .icon {
+        font-size: 18px;
+    }
+    
+    .refresh-btn {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .refresh-btn .icon {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Further adjustments for small screens */
+    .app-header {
+        padding: 10px 12px;
+    }
+    
+    .app-title {
+        font-size: 1.3rem;
+    }
+    
+    .app-subtitle {
+        font-size: 0.75rem;
+    }
+    
+    #app {
+        padding-top: 60px;
+    }
+    
+    .camera-container {
+        top: 60px;
+        height: calc(100% - 60px);
+    }
+    
+    .voice-controls {
+        top: 75px;
+        right: 10px;
+    }
+    
+    .btn-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+    }
+    
+    .component-card {
+        width: 95%;
+        bottom: 90px;
+        border-radius: 12px;
+    }
+    
+    .card-header {
+        padding: 12px;
+    }
+    
+    .card-header h2 {
+        font-size: 1.1rem;
+    }
+    
+    .confidence-badge {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+    }
+    
+    .card-body {
+        padding: 16px;
+        max-height: 40vh;
+    }
+    
+    .card-body h3 {
+        font-size: 0.95rem;
+    }
+    
+    .card-body p, .card-body ul {
+        font-size: 0.85rem;
+    }
+    
+    .info-section {
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+    
+    .card-actions {
+        padding: 12px;
+        gap: 6px;
+    }
+    
+    .card-btn {
+        padding: 8px 10px;
+        font-size: 0.8rem;
+    }
+    
+    .controls-layer {
+        bottom: 15px;
+        gap: 10px;
+    }
+    
+    .scan-btn, .refresh-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 9px;
+    }
+    
+    .scan-btn .icon, .refresh-btn .icon {
+        font-size: 16px;
+    }
+    
+    .refresh-btn {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .refresh-btn .icon {
+        font-size: 14px;
+    }
+}
+
+@media (max-height: 600px) {
+    /* Adjustments for short screens */
+    .app-header {
+        padding: 8px 12px;
+    }
+    
+    .app-title {
+        font-size: 1.2rem;
+    }
+    
+    .app-subtitle {
+        display: none;
+    }
+    
+    #app {
+        padding-top: 50px;
+    }
+    
+    .camera-container {
+        top: 50px;
+        height: calc(100% - 50px);
+    }
+    
+    .voice-controls {
+        top: 60px;
+    }
+    
+    .component-card {
+        bottom: 80px;
+        max-height: 50vh;
+    }
+    
+    .card-body {
+        max-height: 30vh;
+    }
+    
+    .controls-layer {
+        bottom: 10px;
+    }
+    
+    .scan-btn, .refresh-btn {
+        width: 45px;
+        height: 45px;
+    }
+}
+
+/* Landscape orientation adjustments */
+@media (max-height: 500px) and (orientation: landscape) {
+    .app-header {
+        padding: 6px 12px;
+    }
+    
+    .app-title {
+        font-size: 1.1rem;
+    }
+    
+    .app-subtitle {
+        display: none;
+    }
+    
+    #app {
+        padding-top: 40px;
+    }
+    
+    .camera-container {
+        top: 40px;
+        height: calc(100% - 40px);
+    }
+    
+    .voice-controls {
+        top: 50px;
+    }
+    
+    .component-card {
+        bottom: 60px;
+        max-height: 40vh;
+        width: 80%;
+        max-width: 400px;
+    }
+    
+    .card-body {
+        max-height: 25vh;
+    }
+    
+    .controls-layer {
+        bottom: 5px;
+    }
+    
+    .scan-btn, .refresh-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 8px;
+    }
+    
+    .scan-btn .icon, .refresh-btn .icon {
+        font-size: 14px;
+    }
 }

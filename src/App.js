@@ -2,6 +2,7 @@ import { CameraScanner } from './components/CameraScanner.js';
 import { ComponentCard } from './components/ComponentCard.js';
 import { VoicePlayer } from './components/VoicePlayer.js';
 import { AROverlay } from './components/AROverlay.js';
+import { PhoneCameraConnector } from './components/PhoneCameraConnector.js';
 import { generateExplanationPrompt } from './ai/prompts.js';
 
 export class App {
@@ -10,9 +11,16 @@ export class App {
         this.card = new ComponentCard('component-card');
         this.voice = new VoicePlayer('voice-controls');
         this.ar = new AROverlay('ar-overlay');
+        this.phoneConnector = new PhoneCameraConnector();
 
         this.scanBtn = document.getElementById('scan-btn');
+        this.refreshBtn = document.getElementById('refresh-btn');
+        
         this.scanBtn.addEventListener('click', () => this.handleScan());
+        this.refreshBtn.addEventListener('click', () => this.handleRefresh());
+
+        // Make app globally available for phone connector
+        window.app = this;
 
         this.init();
     }
@@ -26,13 +34,38 @@ export class App {
         }
     }
 
+    handleRefresh() {
+        // Clear AR overlay
+        this.ar.clear();
+        
+        // Reset component card
+        this.card.hide();
+        
+        // Reset voice
+        this.voice.setText('');
+        
+        // Re-enable scan button if it was disabled
+        this.scanBtn.disabled = false;
+        this.scanBtn.innerHTML = '<span class="icon">🔍</span> SCAN';
+        
+        console.log("App refreshed - ready for new scan");
+    }
+
+    async captureImage() {
+        if (this.phoneConnector.isPhoneMode) {
+            return await this.phoneConnector.captureFrame();
+        } else {
+            return await this.camera.captureFrameBlob();
+        }
+    }
+
     async handleScan() {
         this.card.showLoading();
         this.ar.clear();
 
         try {
-            // 1. Capture Image
-            const blob = await this.camera.captureFrameBlob();
+            // 1. Capture Image (from phone or webcam)
+            const blob = await this.captureImage();
 
             // 2. Send to Backend
             const formData = new FormData();
