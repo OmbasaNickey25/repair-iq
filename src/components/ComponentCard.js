@@ -19,30 +19,28 @@ export class ComponentCard {
         const confidenceLevel = confidence >= 0.8 ? 'high' : confidence >= 0.6 ? 'medium' : 'low';
         const confidenceIcon = confidence >= 0.8 ? '✓' : confidence >= 0.6 ? '!' : '?';
         
+        // Check if component is unknown
+        const isUnknown = componentName.toLowerCase().includes('unknown') || confidence < 0.3;
+        
         this.container.innerHTML = `
             <div class="card-header">
-                <div class="card-header-content">
+                <div class="card-title-section">
                     <h2>${this.formatComponentName(componentName)}</h2>
-                    <div class="confidence-badge ${confidenceLevel}">
-                        <span class="confidence-icon"></span>
-                        ${Math.round(confidence * 100)}% Confidence
-                    </div>
+                    <span class="confidence-badge ${this.getConfidenceClass(confidence)}">
+                        ${this.getConfidenceIcon(confidence)} ${Math.round(confidence * 100)}%
+                    </span>
                 </div>
+                <button class="card-close-btn" onclick="window.app.card.clear()" aria-label="Close">
+                    ✕
+                </button>
             </div>
             <div class="card-body">
-                ${this.formatExplanation(aiExplanationHTML)}
+                ${isUnknown ? this.getUnknownComponentMessage() : this.formatExplanation(aiExplanationHTML)}
             </div>
-            <div class="card-actions">
-                <button class="card-btn primary" onclick="this.shareResult()">
-                    <span>📤</span> Share
-                </button>
-                <button class="card-btn secondary" onclick="this.learnMore()">
-                    <span>📚</span> Learn More
-                </button>
-            </div>
+            ${isUnknown ? this.getUnknownComponentActions() : this.getStandardActions()}
         `;
         this.container.classList.remove('hidden');
-        this.container.classList.add('show', 'animate-slide-in');
+        this.container.classList.add('animate-slide-in');
     }
 
     setError(message) {
@@ -71,6 +69,74 @@ export class ComponentCard {
         this.container.innerHTML = '';
         this.container.classList.remove('show', 'animate-slide-in', 'animate-scale-in');
         this.container.classList.add('hidden');
+    }
+
+    getConfidenceClass(confidence) {
+        if (confidence >= 0.8) return 'high';
+        if (confidence >= 0.6) return 'medium';
+        return 'low';
+    }
+
+    getConfidenceIcon(confidence) {
+        if (confidence >= 0.8) return '✓';
+        if (confidence >= 0.6) return '!';
+        return '?';
+    }
+
+    getUnknownComponentMessage() {
+        return `
+            <div class="info-section error">
+                <div class="info-title">
+                    <span>❓</span> Unknown Component
+                </div>
+                <p>I couldn't identify this hardware component with confidence. This could be:</p>
+                <ul>
+                    <li>A rare or specialized component</li>
+                    <li>Poor lighting or camera angle</li>
+                    <li>Component not in my training database</li>
+                    <li>Damaged or unclear component markings</li>
+                </ul>
+            </div>
+            <div class="info-section tips">
+                <div class="info-title">
+                    <span>💡</span> Tips for Better Detection
+                </div>
+                <ul>
+                    <li>Ensure good lighting</li>
+                    <li>Hold camera steady and close</li>
+                    <li>Clean the component surface</li>
+                    <li>Try different angles</li>
+                </ul>
+            </div>
+        `;
+    }
+
+    getUnknownComponentActions() {
+        return `
+            <div class="card-actions">
+                <button class="card-btn primary" onclick="window.app.handleScan()">
+                    <span>🔄</span> Rescan
+                </button>
+                <button class="card-btn secondary" onclick="window.app.handleRefresh()">
+                    <span>🔄</span> Refresh
+                </button>
+                <button class="card-btn secondary" onclick="window.app.card.clear()">
+                    <span>✕</span> Close
+                </button>
+            </div>
+        `;
+    }
+
+    getStandardActions() {
+        return `
+            <div class="card-actions">
+                <button class="card-btn primary">📚 Learn More</button>
+                <button class="card-btn secondary">🔗 Share</button>
+                <button class="card-btn secondary" onclick="window.app.card.clear()">
+                    <span>✕</span> Close
+                </button>
+            </div>
+        `;
     }
 
     formatComponentName(name) {
