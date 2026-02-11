@@ -1,3 +1,5 @@
+import API_CONFIG from '../config/api.js';
+
 export class PhoneCameraConnector {
     constructor() {
         this.isPhoneMode = false;
@@ -15,8 +17,7 @@ export class PhoneCameraConnector {
     }
 
     setupWebSocket() {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        this.ws = new WebSocket(`${protocol}//${window.location.host}`);
+        this.ws = new WebSocket(API_CONFIG.WS_URL);
         
         this.ws.onopen = () => {
             console.log('Connected to phone camera server');
@@ -97,7 +98,7 @@ export class PhoneCameraConnector {
     }
 
     async getQRCode() {
-        const response = await fetch('/phone-camera');
+        const response = await fetch(`${API_CONFIG.BASE_URL}/phone-camera`);
         if (!response.ok) {
             throw new Error('Failed to get QR code');
         }

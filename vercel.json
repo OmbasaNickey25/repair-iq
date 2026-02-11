@@ -1,28 +1,22 @@
 {
   "version": 2,
-  "name": "repair-iq-pwa",
-  "routes": [
+  "name": "repair-iq-frontend",
+  "builds": [
     {
-      "src": "/api/(.*)",
-      "dest": "/backend/main.js"
-    },
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "public"
+      }
+    }
+  ],
+  "routes": [
     {
       "src": "/(.*)",
       "dest": "/public/$1"
     }
   ],
   "env": {
-    "PORT": "3000",
-    "NODE_ENV": "production",
-    "TFJS_MODEL_PATH": "./tfjs_model/model.json",
-    "ENABLE_LOGGING": "true"
-  },
-  "functions": {
-    "backend/main.js": {
-      "maxDuration": 30
-    }
-  },
-  "installCommand": "npm install",
-  "buildCommand": "npm run build",
-  "outputDirectory": "public"
+    "REACT_APP_API_URL": "https://your-render-backend.onrender.com"
+  }
 }

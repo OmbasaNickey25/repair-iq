@@ -1,16 +1,9 @@
 {
-  "name": "repair-iq-pwa",
+  "name": "repair-iq-frontend",
   "version": "1.0.0",
-  "description": "Smart Hardware Learning Assistant PWA",
-  "main": "backend/main.js",
+  "description": "Smart Hardware Learning Assistant PWA - Frontend",
   "scripts": {
-    "start": "node backend/main.js",
-    "build": "cd backend && npm install && npm run build",
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "cd backend && npm start",
-    "dev:frontend": "npx serve public -p 3000 -s",
-    "postinstall": "cd backend && npm install",
-    "vercel-build": "cd backend && npm install && npm run build",
+    "vercel-build": "echo 'Static files ready'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -21,6 +14,5 @@
     "hardware"
   ],
   "author": "",
-  "license": "ISC",
-  "dependencies": {}
+  "license": "ISC"
 }

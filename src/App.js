@@ -3,7 +3,9 @@ import { ComponentCard } from './components/ComponentCard.js';
 import { VoicePlayer } from './components/VoicePlayer.js';
 import { AROverlay } from './components/AROverlay.js';
 import { PhoneCameraConnector } from './components/PhoneCameraConnector.js';
+import { ImageUploader } from './components/ImageUploader.js';
 import { generateExplanationPrompt } from './ai/prompts.js';
+import API_CONFIG from './config/api.js';
 
 export class App {
     constructor() {
@@ -12,6 +14,7 @@ export class App {
         this.voice = new VoicePlayer('voice-controls');
         this.ar = new AROverlay('ar-overlay');
         this.phoneConnector = new PhoneCameraConnector();
+        this.imageUploader = new ImageUploader();
 
         this.scanBtn = document.getElementById('scan-btn');
         this.refreshBtn = document.getElementById('refresh-btn');
@@ -19,7 +22,7 @@ export class App {
         this.scanBtn.addEventListener('click', () => this.handleScan());
         this.refreshBtn.addEventListener('click', () => this.handleRefresh());
 
-        // Make app globally available for phone connector
+        // Make app globally available for components
         window.app = this;
 
         this.init();
@@ -35,11 +38,14 @@ export class App {
     }
 
     handleRefresh() {
+        // Clear uploaded image
+        this.imageUploader.clearUploadedImage();
+        
         // Clear AR overlay
         this.ar.clear();
         
-        // Reset component card
-        this.card.hide();
+        // Clear component card
+        this.card.clear();
         
         // Reset voice
         this.voice.setText('');
@@ -52,10 +58,72 @@ export class App {
     }
 
     async captureImage() {
+        // Check if there's an uploaded image first
+        const uploadedImage = this.imageUploader.getUploadedImage();
+        if (uploadedImage) {
+            return uploadedImage;
+        }
+        
+        // Otherwise capture from phone or webcam
         if (this.phoneConnector.isPhoneMode) {
             return await this.phoneConnector.captureFrame();
         } else {
             return await this.camera.captureFrameBlob();
+        }
+    }
+
+    async handleScanWithUpload(imageBlob) {
+        this.card.showLoading();
+        this.ar.clear();
+
+        try {
+            // Use the uploaded image directly
+            const blob = imageBlob;
+
+            // Send to Backend
+            const formData = new FormData();
+            formData.append('image', blob, 'upload.jpg');
+
+            const response = await fetch(`${API_CONFIG.BASE_URL}/predict`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || errorData.details || "Backend prediction failed");
+            }
+
+            const result = await response.json();
+            const { component, confidence } = result;
+
+            // Update AR
+            this.ar.showLabel(component);
+
+            // Generate AI Explanation
+            let aiText = "";
+            if (window.puter) {
+                const prompt = generateExplanationPrompt(component);
+                const aiResponse = await window.puter.ai.chat(prompt);
+                aiText = aiResponse.toString();
+            } else {
+                aiText = `
+                    <h3>${component}</h3>
+                    <p>AI generation unavailable (puter.js not found). Here is a static explanation.</p>
+                    <p>This is a critical hardware component.</p>
+                `;
+            }
+
+            // Update Card
+            this.card.update(component, confidence, aiText);
+
+            // Prepare Voice
+            const plainText = aiText.replace(/<[^>]*>?/gm, '');
+            this.voice.setText(plainText);
+
+        } catch (error) {
+            console.error(error);
+            this.card.setError(error.message);
         }
     }
 
@@ -71,7 +139,7 @@ export class App {
             const formData = new FormData();
             formData.append('image', blob, 'capture.jpg');
 
-            const response = await fetch('/predict', {
+            const response = await fetch(`${API_CONFIG.BASE_URL}/predict`, {
                 method: 'POST',
                 body: formData
             });

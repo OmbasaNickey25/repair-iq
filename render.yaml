@@ -1,17 +1,19 @@
 services:
   - type: web
-    name: repair-iq-pwa
+    name: repair-iq-backend
     env: node
     plan: free
-    buildCommand: npm install && cd backend && npm install && npm run build
-    startCommand: node backend/main.js
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node main.js
     healthCheckPath: /health
     envVars:
       - key: PORT
-        value: 3000
+        value: 10000
       - key: NODE_ENV
         value: production
       - key: TFJS_MODEL_PATH
         value: ./tfjs_model/model.json
       - key: ENABLE_LOGGING
         value: true
+      - key: CORS_ORIGIN
+        value: https://your-vercel-app.vercel.app

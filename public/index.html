@@ -36,10 +36,16 @@
             <button id="refresh-btn" class="refresh-btn" aria-label="Refresh Scan">
                 <span class="icon">🔄</span> REFRESH
             </button>
+            <button id="upload-btn" class="upload-btn" aria-label="Upload Image">
+                <span class="icon">📁</span> UPLOAD
+            </button>
             <button id="camera-btn" class="camera-btn" aria-label="Switch Camera">
                 <span class="icon">📱</span> PHONE
             </button>
         </div>
+        
+        <!-- Hidden file input -->
+        <input type="file" id="image-upload" accept="image/*" style="display: none;">
 
         <!-- Info Card -->
         <div id="component-card" class="component-card hidden">

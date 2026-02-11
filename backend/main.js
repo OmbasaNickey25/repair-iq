@@ -13,7 +13,8 @@ const config = {
     port: process.env.PORT || 3000,
     nodeEnv: process.env.NODE_ENV || 'development',
     modelPath: process.env.TFJS_MODEL_PATH || './tfjs_model/model.json',
-    enableLogging: process.env.ENABLE_LOGGING !== 'false'
+    enableLogging: process.env.ENABLE_LOGGING !== 'false',
+    corsOrigin: process.env.CORS_ORIGIN || '*'
 };
 
 const app = express();
@@ -22,12 +23,12 @@ const wss = new WebSocket.Server({ server });
 const port = config.port;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: config.corsOrigin,
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type']
+}));
 app.use(express.json());
-// Serve frontend from the 'public' directory one level up
-app.use(express.static(path.join(__dirname, '../public')));
-// Serve src directory for ES modules
-app.use('/src', express.static(path.join(__dirname, '../src')));
 
 // Upload configuration
 const upload = multer({ storage: multer.memoryStorage() });

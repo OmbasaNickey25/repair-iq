@@ -113,7 +113,7 @@ body {
     pointer-events: none; /* Let clicks pass through except buttons */
 }
 
-.scan-btn, .refresh-btn, .camera-btn {
+.scan-btn, .refresh-btn, .upload-btn, .camera-btn {
     pointer-events: auto;
     background: var(--primary-color);
     border: 4px solid rgba(255, 255, 255, 0.2);
@@ -138,6 +138,12 @@ body {
     height: 60px;
 }
 
+.upload-btn {
+    background: #17a2b8;
+    width: 60px;
+    height: 60px;
+}
+
 .camera-btn {
     background: #6f42c1;
     width: 60px;
@@ -149,11 +155,11 @@ body {
     animation: pulse 2s infinite;
 }
 
-.scan-btn:active, .refresh-btn:active, .camera-btn:active {
+.scan-btn:active, .refresh-btn:active, .upload-btn:active, .camera-btn:active {
     transform: scale(0.95);
 }
 
-.scan-btn:hover, .refresh-btn:hover, .camera-btn:hover {
+.scan-btn:hover, .refresh-btn:hover, .upload-btn:hover, .camera-btn:hover {
     background-color: #0056b3;
 }
 
@@ -161,16 +167,20 @@ body {
     background-color: #218838;
 }
 
+.upload-btn:hover {
+    background-color: #138496;
+}
+
 .camera-btn:hover {
     background-color: #5a32a3;
 }
 
-.scan-btn .icon, .refresh-btn .icon, .camera-btn .icon {
+.scan-btn .icon, .refresh-btn .icon, .upload-btn .icon, .camera-btn .icon {
     font-size: 20px;
     margin-bottom: 2px;
 }
 
-.refresh-btn .icon, .camera-btn .icon {
+.refresh-btn .icon, .upload-btn .icon, .camera-btn .icon {
     font-size: 18px;
 }
 
@@ -381,16 +391,13 @@ body {
     font-weight: 600;
     color: var(--text-color);
     margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
 }
 
 /* Loading State */
 .card-loading {
-    text-align: center;
-    padding: 40px 20px;
-    background: var(--card-bg);
+text-align: center;
+padding: 40px 20px;
+background: var(--card-bg);
 }
 
 .loading-spinner {
@@ -587,7 +594,63 @@ body {
     animation: pulse 2s infinite;
 }
 
-/* Responsive Design */
+/* Drag and Drop Styles */
+body.drag-active {
+    background: linear-gradient(135deg, rgba(0, 123, 255, 0.1), rgba(0, 0, 0, 0.8));
+}
+
+body.drag-active::before {
+    content: '📁 Drop image here to analyze';
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--card-bg);
+    color: var(--text-color);
+    padding: 30px 40px;
+    border-radius: 20px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    z-index: 1000;
+    box-shadow: var(--shadow-xl);
+    border: 2px dashed var(--primary-color);
+    backdrop-filter: blur(20px);
+    animation: pulse 2s infinite;
+}
+
+/* Upload Button Mobile Responsive */
+@media (max-width: 768px) {
+    .scan-btn, .refresh-btn, .upload-btn, .camera-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 8px;
+        flex-shrink: 0;
+        min-width: 50px;
+        min-height: 50px;
+    }
+    
+    .scan-btn .icon, .refresh-btn .icon, .upload-btn .icon, .camera-btn .icon {
+        font-size: 16px;
+        margin-bottom: 1px;
+    }
+    
+    .refresh-btn, .upload-btn, .camera-btn {
+        width: 45px;
+        height: 45px;
+        min-width: 45px;
+        min-height: 45px;
+    }
+    
+    .refresh-btn .icon, .upload-btn .icon, .camera-btn .icon {
+        font-size: 14px;
+    }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
 @media (max-width: 768px) {
     /* Header adjustments */
     .app-header {
