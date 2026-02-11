@@ -82,18 +82,36 @@ RepairIQ is a Progressive Web App (PWA) designed to help students and technician
 
     *Note: For camera access on mobile devices, you must use HTTPS or `localhost`. To test on a mobile device on the same network, you may need a local tunnel (like ngrok).*
 
-## Deployment (Render)
+## Deployment
 
+### **Render (Original)**
 This project is configured for easy deployment on [Render](https://render.com).
 
-1.  **Push to GitHub/GitLab.**
-2.  **Create a New Web Service** on Render connected to your repository.
-3.  **Configuration:**
-    -   **Environment**: Node
-    -   **Build Command**: `npm install && cd backend && npm install && pip install tensorflowjs && python -m tensorflowjs_converter --input_format keras hardware_model.h5 tfjs_model`
-    -   **Start Command**: `node backend/main.js`
-    
-    *Alternatively, you can use the `render.yaml` Blueprint if you connect your account.*
+1. **Push to GitHub/GitLab**
+2. **Create a New Web Service** on Render connected to your repository
+3. **Configuration**:
+   - **Environment**: Node
+   - **Build Command**: `npm install && cd backend && npm install && npm run build`
+   - **Start Command**: `node backend/main.js`
+   - **Health Check Path**: `/health`
+
+*Alternatively, you can use the `render.yaml` Blueprint if you connect your account.*
+
+### **Vercel (Alternative)**
+The project can also be deployed on [Vercel](https://vercel.com) with optimized configuration.
+
+1. **Push to GitHub/GitLab**
+2. **Import Project** on Vercel connected to your repository
+3. **Automatic Deployment**: Vercel will detect the `vercel.json` configuration
+4. **Environment Variables**: Set automatically from `vercel.json`
+
+#### **Vercel Configuration**
+- **Framework**: Node.js (Serverless)
+- **Build Command**: `npm run vercel-build`
+- **Output Directory**: `public`
+- **API Routes**: `/api/*` routes to backend
+- **Static Files**: `/*` routes to public folder
+- **Environment**: Production variables pre-configured
 
 ## API Endpoints
 
@@ -172,6 +190,7 @@ This project is configured for easy deployment on [Render](https://render.com).
 │       └── prompts.js          # AI Prompt Templates
 ├── serviceWorker.js               # Offline Caching Strategy
 ├── render.yaml                   # Render Deployment Config
+├── vercel.json                   # Vercel Deployment Config
 └── package.json                  # Root Config & Scripts
 ```
 
