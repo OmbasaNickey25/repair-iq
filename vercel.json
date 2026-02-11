@@ -1,12 +1,6 @@
 {
   "version": 2,
   "name": "repair-iq-pwa",
-  "builds": [
-    {
-      "src": "backend/main.js",
-      "use": "@vercel/node"
-    }
-  ],
   "routes": [
     {
       "src": "/api/(.*)",
@@ -25,11 +19,10 @@
   },
   "functions": {
     "backend/main.js": {
-      "maxDuration": 10
+      "maxDuration": 30
     }
   },
   "installCommand": "npm install",
   "buildCommand": "npm run build",
-  "outputDirectory": "public",
-  "framework": null
+  "outputDirectory": "public"
 }
