@@ -65,12 +65,28 @@ const HARDWARE_CLASSES = [
 let model;
 const loadModel = async () => {
     try {
-        const modelPath = path.join(__dirname, 'hardware_model.h5');
-        // Load Keras model directly using tfjs-node
-        model = await tf.node.loadKerasModel(modelPath);
+        const modelDir = path.join(__dirname, 'tfjs_model');
+        const modelPath = path.join(modelDir, 'model.json');
+
+        console.log(`[DEBUG] Checking model directory: ${modelDir}`);
+        if (fs.existsSync(modelDir)) {
+            console.log(`[DEBUG] Directory contents:`, fs.readdirSync(modelDir));
+        } else {
+            console.error(`[ERROR] Model directory does not exist! Conversion failed or path is wrong.`);
+        }
+
+        console.log(`[DEBUG] Attempting to load model from: file://${modelPath}`);
+
+        // Load converted TFJS model
+        model = await tf.loadLayersModel('file://' + modelPath);
         console.log("Hardware Model Loaded Successfully from:", modelPath);
     } catch (error) {
         console.error("Error loading model:", error);
+        try {
+            // Fallback: Check if original h5 exists
+            const h5Path = path.join(__dirname, 'hardware_model.h5');
+            console.log(`[DEBUG] Checking for original .h5 file: ${h5Path} exists=${fs.existsSync(h5Path)}`);
+        } catch (e) { console.error("Error checking h5:", e); }
     }
 };
 
