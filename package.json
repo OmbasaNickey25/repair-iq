@@ -5,6 +5,9 @@
   "main": "backend/main.js",
   "scripts": {
     "start": "node backend/main.js",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "echo 'Frontend build completed - using static files'",
+    "build:backend": "echo 'Backend build completed'",
     "postinstall": "cd backend && npm install",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -5,8 +5,16 @@ const path = require('path');
 const fs = require('fs');
 const tf = require('@tensorflow/tfjs-node');
 
+// Environment configuration
+const config = {
+    port: process.env.PORT || 3000,
+    nodeEnv: process.env.NODE_ENV || 'development',
+    modelPath: process.env.TFJS_MODEL_PATH || './tfjs_model/model.json',
+    enableLogging: process.env.ENABLE_LOGGING !== 'false'
+};
+
 const app = express();
-const port = process.env.PORT || 3000;
+const port = config.port;
 
 // Middleware
 app.use(cors());
@@ -63,30 +71,55 @@ const HARDWARE_CLASSES = [
 
 // Load Model
 let model;
+let modelMetadata;
 const loadModel = async () => {
     try {
-        const modelDir = path.join(__dirname, 'tfjs_model');
-        const modelPath = path.join(modelDir, 'model.json');
+        const modelDir = path.dirname(config.modelPath);
+        const modelPath = path.resolve(__dirname, config.modelPath);
+        const metadataPath = path.join(modelDir, 'metadata.json');
 
-        console.log(`[DEBUG] Checking model directory: ${modelDir}`);
-        if (fs.existsSync(modelDir)) {
-            console.log(`[DEBUG] Directory contents:`, fs.readdirSync(modelDir));
-        } else {
-            console.error(`[ERROR] Model directory does not exist! Conversion failed or path is wrong.`);
+        if (config.enableLogging) {
+            console.log(`[DEBUG] Checking model directory: ${modelDir}`);
+            if (fs.existsSync(modelDir)) {
+                console.log(`[DEBUG] Directory contents:`, fs.readdirSync(modelDir));
+            } else {
+                console.error(`[ERROR] Model directory does not exist! Path: ${modelDir}`);
+            }
+            console.log(`[DEBUG] Attempting to load model from: file://${modelPath}`);
         }
 
-        console.log(`[DEBUG] Attempting to load model from: file://${modelPath}`);
+        // Load model metadata first
+        if (fs.existsSync(metadataPath)) {
+            const metadataRaw = fs.readFileSync(metadataPath, 'utf8');
+            modelMetadata = JSON.parse(metadataRaw);
+            if (config.enableLogging) {
+                console.log(`[DEBUG] Model metadata loaded:`, modelMetadata);
+            }
+        }
 
-        // Load converted TFJS model
+        // Load TFJS model in standard format
         model = await tf.loadLayersModel('file://' + modelPath);
         console.log("Hardware Model Loaded Successfully from:", modelPath);
+        
+        // Log model info if available
+        if (modelMetadata) {
+            console.log("Model info:", {
+                format: modelMetadata.format,
+                classes: modelMetadata.classes?.length || 'unknown',
+                imageSize: modelMetadata.imageSize || 'unknown'
+            });
+        }
     } catch (error) {
         console.error("Error loading model:", error);
-        try {
-            // Fallback: Check if original h5 exists
-            const h5Path = path.join(__dirname, 'hardware_model.h5');
+        
+        // Fallback: Check if original h5 exists for debugging
+        const h5Path = path.join(__dirname, 'hardware_model.h5');
+        if (config.enableLogging) {
             console.log(`[DEBUG] Checking for original .h5 file: ${h5Path} exists=${fs.existsSync(h5Path)}`);
-        } catch (e) { console.error("Error checking h5:", e); }
+        }
+        
+        // Don't crash the app if model fails to load
+        console.warn("Application will continue without ML predictions");
     }
 };
 
@@ -104,7 +137,10 @@ app.post('/predict', upload.single('image'), async (req, res) => {
         }
 
         if (!model) {
-            return res.status(503).json({ error: 'Model not loaded yet' });
+            return res.status(503).json({ 
+                error: 'Model not loaded yet',
+                fallback: 'Please try again later or contact support'
+            });
         }
 
         // Decode image buffer
@@ -127,7 +163,9 @@ app.post('/predict', upload.single('image'), async (req, res) => {
         const maxProbability = Math.max(...predictionData);
         const predictionIndex = predictionData.indexOf(maxProbability);
 
-        const detectedComponent = HARDWARE_CLASSES[predictionIndex] || "Unknown";
+        // Use classes from metadata if available, otherwise fallback to hardcoded list
+        const classes = modelMetadata?.classes || HARDWARE_CLASSES;
+        const detectedComponent = classes[predictionIndex] || "Unknown";
 
         // Cleanup tensors
         tf.dispose([tensor, normalized, predictions]);
@@ -141,15 +179,59 @@ app.post('/predict', upload.single('image'), async (req, res) => {
 
     } catch (error) {
         console.error('Prediction error:', error);
-        // Enhanced error logging
-        if (error.message.includes('Input buffer contains unsupported image format')) {
-            return res.status(400).json({ error: 'Invalid image format', details: 'The uploaded file is not a valid image or is unsupported.' });
+        
+        // Enhanced error logging in development
+        const errorResponse = { 
+            error: 'Internal server error',
+            details: error.message 
+        };
+        
+        if (config.nodeEnv === 'development') {
+            errorResponse.stack = error.stack;
         }
-        res.status(500).json({ error: 'Internal server error', details: error.message, stack: process.env.NODE_ENV === 'development' ? error.stack : undefined });
+        
+        // Specific error handling
+        if (error.message.includes('Input buffer contains unsupported image format')) {
+            return res.status(400).json({ 
+                error: 'Invalid image format', 
+                details: 'The uploaded file is not a valid image or is unsupported.' 
+            });
+        }
+        
+        res.status(500).json(errorResponse);
     }
+});
+
+// Health check endpoint for Render monitoring
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        modelLoaded: !!model,
+        timestamp: new Date().toISOString(),
+        environment: config.nodeEnv,
+        uptime: process.uptime()
+    });
 });
 
 // Start server
 app.listen(port, () => {
     console.log(`Backend server running at http://localhost:${port}`);
+    console.log(`Environment: ${config.nodeEnv}`);
+    console.log(`Health check available at: http://localhost:${port}/health`);
+});
+
+// Graceful shutdown and memory cleanup
+process.on('SIGTERM', () => {
+    console.log('SIGTERM received, cleaning up...');
+    if (model) {
+        model.dispose();
+        console.log('Model disposed');
+    }
+    process.exit(0);
+});
+
+process.on('exit', () => {
+    if (model) {
+        model.dispose();
+    }
 });

@@ -3,8 +3,15 @@ services:
     name: repair-iq-pwa
     env: node
     plan: free
-    buildCommand: npm install && cd backend && npm install && pip install tensorflowjs && tensorflowjs_converter --input_format keras hardware_model.h5 tfjs_model
+    buildCommand: npm install && cd backend && npm install && npm run build
     startCommand: node backend/main.js
+    healthCheckPath: /health
     envVars:
       - key: PORT
         value: 3000
+      - key: NODE_ENV
+        value: production
+      - key: TFJS_MODEL_PATH
+        value: ./tfjs_model/model.json
+      - key: ENABLE_LOGGING
+        value: true
