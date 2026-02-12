@@ -1,19 +1,14 @@
 {
   "version": 2,
   "name": "repair-iq-frontend",
-  "builds": [
+  "buildCommand": "echo 'Static files ready'",
+  "outputDirectory": "public",
+  "installCommand": "",
+  "framework": null,
+  "rewrites": [
     {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "public"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
+      "source": "/(.*)",
+      "destination": "/$1"
     }
   ],
   "env": {

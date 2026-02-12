@@ -1,0 +1,21 @@
+{
+    "name": "RepairIQ - Smart Hardware Assistant",
+    "short_name": "RepairIQ",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#1a1a1a",
+    "theme_color": "#007bff",
+    "description": "AI-powered hardware learning and troubleshooting assistant.",
+    "icons": [
+        {
+            "src": "icons/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
