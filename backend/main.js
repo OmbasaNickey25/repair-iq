@@ -14,7 +14,7 @@ const config = {
     nodeEnv: process.env.NODE_ENV || 'development',
     modelPath: process.env.TFJS_MODEL_PATH || './tfjs_model/model.json',
     enableLogging: process.env.ENABLE_LOGGING !== 'false',
-    corsOrigin: process.env.CORS_ORIGIN || '*'
+    corsOrigin: (process.env.CORS_ORIGIN || '*').replace(/\/$/, '') // Remove trailing slash
 };
 
 const app = express();
