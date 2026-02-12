@@ -5,6 +5,7 @@ import { AROverlay } from './components/AROverlay.js';
 import { PhoneCameraConnector } from './components/PhoneCameraConnector.js';
 import { ImageUploader } from './components/ImageUploader.js';
 import { generateExplanationPrompt } from './ai/prompts.js';
+import { getComponentFallback } from './ai/fallbackData.js';
 import API_CONFIG from './config/api.js';
 
 export class App {
@@ -84,7 +85,7 @@ export class App {
             const formData = new FormData();
             formData.append('image', blob, 'upload.jpg');
 
-            const response = await fetch(`${API_CONFIG.BASE_URL}predict`, {
+            const response = await fetch(`${API_CONFIG.BASE_URL}/predict`, {
                 method: 'POST',
                 body: formData
             });
@@ -102,16 +103,17 @@ export class App {
 
             // Generate AI Explanation
             let aiText = "";
-            if (window.puter) {
-                const prompt = generateExplanationPrompt(component);
-                const aiResponse = await window.puter.ai.chat(prompt);
-                aiText = aiResponse.toString();
-            } else {
-                aiText = `
-                    <h3>${component}</h3>
-                    <p>AI generation unavailable (puter.js not found). Here is a static explanation.</p>
-                    <p>This is a critical hardware component.</p>
-                `;
+            try {
+                if (window.puter) {
+                    const prompt = generateExplanationPrompt(component);
+                    const aiResponse = await window.puter.ai.chat(prompt);
+                    aiText = aiResponse.toString();
+                } else {
+                    throw new Error("Puter not available");
+                }
+            } catch (error) {
+                console.warn("AI generation failed, using fallback:", error.message);
+                aiText = getComponentFallback(component);
             }
 
             // Update Card
@@ -139,7 +141,7 @@ export class App {
             const formData = new FormData();
             formData.append('image', blob, 'capture.jpg');
 
-            const response = await fetch(`${API_CONFIG.BASE_URL}predict`, {
+            const response = await fetch(`${API_CONFIG.BASE_URL}/predict`, {
                 method: 'POST',
                 body: formData
             });
@@ -156,21 +158,19 @@ export class App {
             this.ar.showLabel(component);
 
             // 4. Generate AI Explanation
-            // Using puter.js if available globally, else mock
+            // Using puter.js if available globally, else fallback data
             let aiText = "";
-            if (window.puter) {
-                const prompt = generateExplanationPrompt(component);
-                const aiResponse = await window.puter.ai.chat(prompt);
-                aiText = aiResponse.toString(); // puter.ai.chat returns an object usually, .toString() or .message
-                // Adjust based on actual puter.js API. Assuming puter.ai.chat(msg) returns { message: { content: ... } } or similar string.
-                // Checking documentation or standard usage: often returns a string or promise resolving to string.
-                // Let's assume text response.
-            } else {
-                aiText = `
-                    <h3>${component}</h3>
-                    <p>AI generation unavailable (puter.js not found). Here is a static explanation.</p>
-                    <p>This is a critical hardware component.</p>
-                `;
+            try {
+                if (window.puter) {
+                    const prompt = generateExplanationPrompt(component);
+                    const aiResponse = await window.puter.ai.chat(prompt);
+                    aiText = aiResponse.toString();
+                } else {
+                    throw new Error("Puter not available");
+                }
+            } catch (error) {
+                console.warn("AI generation failed, using fallback:", error.message);
+                aiText = getComponentFallback(component);
             }
 
             // 5. Update Card

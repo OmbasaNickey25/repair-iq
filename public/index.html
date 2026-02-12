@@ -7,8 +7,12 @@
     <link rel="manifest" href="/manifest.json">
     <link rel="stylesheet" href="/css/style.css">
     <!-- PWA Theme Color -->
-    <meta name="theme-color" content="#1a1a1a">
+    <meta name="theme-color" content="#0f172a">
     <link rel="icon" href="/icons/icon-192x192.png">
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Puter.js -->
     <script src="https://js.puter.com/v2/"></script>
 </head>
@@ -19,6 +23,10 @@
             <h1 class="app-title">🔧 HW Scanner</h1>
             <p class="app-subtitle">Smart Hardware Learning Assistant</p>
         </div>
+        <nav class="nav-menu">
+            <button class="nav-btn" id="how-to-use-btn">How to Use</button>
+            <button class="nav-btn" id="about-btn">About</button>
+        </nav>
     </header>
 
     <div id="app">
@@ -58,8 +66,140 @@
         </div>
     </div>
 
+    <!-- How to Use Modal -->
+    <div id="how-to-use-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>How to Use HW Scanner</h2>
+                <button class="modal-close" onclick="closeModal('how-to-use-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h3>Getting Started</h3>
+                <p>HW Scanner helps you identify computer hardware components and learn about them. Here's how to use it:</p>
+                
+                <h3>Scanning Components</h3>
+                <ul>
+                    <li><strong>Point your camera</strong> at the hardware component you want to identify</li>
+                    <li>Tap the <strong>SCAN</strong> button to capture and analyze</li>
+                    <li>Wait for the AI to identify the component and provide information</li>
+                </ul>
+                
+                <h3>Uploading Images</h3>
+                <ul>
+                    <li>Tap the <strong>UPLOAD</strong> button to select an image from your device</li>
+                    <li>You can also drag and drop images onto the app</li>
+                    <li>Supported formats: JPG, PNG, WebP</li>
+                </ul>
+                
+                <h3>Using Phone Camera</h3>
+                <ul>
+                    <li>Tap the <strong>PHONE</strong> button to connect your phone's camera</li>
+                    <li>Scan the QR code displayed with your phone</li>
+                    <li>Your phone camera will stream to the app</li>
+                </ul>
+                
+                <h3>Reading Results</h3>
+                <ul>
+                    <li>View the identified component name and confidence level</li>
+                    <li>Read detailed information about the component</li>
+                    <li>Listen to explanations using the voice controls</li>
+                    <li>Tap the card to dismiss or use REFRESH to clear</li>
+                </ul>
+                
+                <h3>Tips for Best Results</h3>
+                <ul>
+                    <li>Ensure good lighting on the component</li>
+                    <li>Get close enough to see details clearly</li>
+                    <li>Hold the camera steady when scanning</li>
+                    <li>Focus on one component at a time</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Modal -->
+    <div id="about-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>About HW Scanner</h2>
+                <button class="modal-close" onclick="closeModal('about-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h3>What is HW Scanner?</h3>
+                <p>HW Scanner is an AI-powered hardware component recognition tool designed to help users learn about computer components and electronics. It uses computer vision and machine learning to identify components and provide educational information.</p>
+                
+                <h3>Key Features</h3>
+                <ul>
+                    <li><strong>Real-time Recognition:</strong> Instantly identify hardware components through your camera</li>
+                    <li><strong>Educational Content:</strong> Learn about component functions, specifications, and uses</li>
+                    <li><strong>Image Upload:</strong> Analyze saved images of components</li>
+                    <li><strong>Phone Camera Support:</strong> Use your phone as a wireless camera</li>
+                    <li><strong>Voice Explanations:</strong> Listen to component descriptions</li>
+                    <li><strong>Offline Capability:</strong> Works as a PWA with service worker caching</li>
+                </ul>
+                
+                <h3>Technology</h3>
+                <ul>
+                    <li>TensorFlow.js for machine learning</li>
+                    <li>Computer vision for object detection</li>
+                    <li>WebRTC for phone camera streaming</li>
+                    <li>Progressive Web App (PWA) technology</li>
+                    <li>Puter.ai for AI-generated explanations</li>
+                </ul>
+                
+                <h3>Version</h3>
+                <p>HW Scanner v1.0.0</p>
+                <p><em>Built with passion for hardware education.</em></p>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Script -->
     <script type="module" src="/src/index.js"></script>
+    
+    <!-- Modal Scripts -->
+    <script>
+        // Modal functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+        
+        // Setup modal button listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            const howToUseBtn = document.getElementById('how-to-use-btn');
+            const aboutBtn = document.getElementById('about-btn');
+            
+            if (howToUseBtn) {
+                howToUseBtn.addEventListener('click', () => openModal('how-to-use-modal'));
+            }
+            
+            if (aboutBtn) {
+                aboutBtn.addEventListener('click', () => openModal('about-modal'));
+            }
+            
+            // Close modal on overlay click
+            document.querySelectorAll('.modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        overlay.classList.remove('active');
+                    }
+                });
+            });
+        });
+        
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(modal => {
+                    modal.classList.remove('active');
+                });
+            }
+        });
+    </script>
     
     <!-- PWA Service Worker Registration -->
     <script>
