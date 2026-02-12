@@ -84,7 +84,7 @@ export class App {
             const formData = new FormData();
             formData.append('image', blob, 'upload.jpg');
 
-            const response = await fetch(`${API_CONFIG.BASE_URL}predict`, {
+            const response = await fetch(`${API_CONFIG.BASE_URL}/predict`, {
                 method: 'POST',
                 body: formData
             });
@@ -139,7 +139,7 @@ export class App {
             const formData = new FormData();
             formData.append('image', blob, 'capture.jpg');
 
-            const response = await fetch(`${API_CONFIG.BASE_URL}predict`, {
+            const response = await fetch(`${API_CONFIG.BASE_URL}/predict`, {
                 method: 'POST',
                 body: formData
             });
