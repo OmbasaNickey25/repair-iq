@@ -757,6 +757,7 @@ body.drag-active::before {
         flex-wrap: nowrap;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        z-index: 100; /* Ensure buttons are above everything */
     }
     
     .scan-btn, .refresh-btn, .camera-btn {
@@ -882,6 +883,7 @@ body.drag-active::before {
         right: 8px;
         width: calc(100% - 16px);
         gap: 8px;
+        z-index: 100; /* Ensure buttons are above everything */
     }
     
     .scan-btn, .refresh-btn, .camera-btn {
