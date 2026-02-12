@@ -748,7 +748,7 @@ body.drag-active::before {
     
     /* Controls adjustments - CRITICAL FIX */
     .controls-layer {
-        bottom: 10px;
+        bottom: 20px;
         left: 10px;
         right: 10px;
         width: calc(100% - 20px);
@@ -878,7 +878,7 @@ body.drag-active::before {
     }
     
     .controls-layer {
-        bottom: 8px;
+        bottom: 15px;
         left: 8px;
         right: 8px;
         width: calc(100% - 16px);
@@ -953,7 +953,7 @@ body.drag-active::before {
     }
     
     .controls-layer {
-        bottom: 5px;
+        bottom: 15px;
         left: 5px;
         right: 5px;
         width: calc(100% - 10px);
@@ -1058,3 +1058,4 @@ body.drag-active::before {
         font-size: 8px;
     }
 }
+
